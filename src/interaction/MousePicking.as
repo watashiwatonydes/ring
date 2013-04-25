@@ -64,7 +64,7 @@ package interaction
 			_target.stage.addChild( _pickingAnchor );
 
 			
-			_dragJointConnection = new JointConnection( JointConnection.ROPE_JOINT, _pickingAnchor, someVertexBody, 2, .1 );
+			_dragJointConnection = new JointConnection( JointConnection.ROPE_JOINT, _pickingAnchor, someVertexBody, 2, .1, .5 );
 			_target.stage.addChild( _dragJointConnection );
 			
 			var v2:b2Vec2 = mouseToWorld();

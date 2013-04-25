@@ -10,9 +10,11 @@ package
 	import flash.display.StageAlign;
 	import flash.display.StageScaleMode;
 	import flash.events.Event;
+	import flash.events.KeyboardEvent;
 	import flash.events.TimerEvent;
 	import flash.filters.BlurFilter;
 	import flash.geom.Point;
+	import flash.ui.Keyboard;
 	import flash.utils.Timer;
 	
 	import geometry.Quad;
@@ -28,7 +30,7 @@ package
 	import physics.JointConnection;
 	import physics.VertexBody;
 	
-	[SWF( widthPercent="100", heightPercent="100", backgroundColor=0x000000, frameRate="60" )]
+	[SWF( widthPercent="100", heightPercent="100", backgroundColor=0x000000, frameRate="50" )]
 	public class Ring extends Sprite
 	{
 		private var _stageW2:int;
@@ -40,8 +42,8 @@ package
 		private var _picking:MousePicking;
 		
 		// public static const COLORS:Array 		= [ 0x1369AB, 0x7108A0, 0x00940E, 0xFFD702, 0xA02F09 ];
-		// public static const COLORS:Array 		= [ 0xE82181, 0xFFFFFF ];
-		public static const COLORS:Array 		= [ 0x124D6B, 0x31526B, 0x008FBD, 0x44C9E0, 0xC2DADB ];
+		public static const COLORS:Array 		= [ 0xFF0000, 0xFFFFFF, 0xFF0000, 0xFFFFFF, 0xFF0000 ];
+		// public static const COLORS:Array 		= [ 0x124D6B, 0x31526B, 0x008FBD, 0x44C9E0, 0xC2DADB ];
 		
 		
 		public static const SOUNDS_DATAS:Vector.<SiONData>	= new Vector.<SiONData>();
@@ -55,6 +57,8 @@ package
 		private var DRAW_BUFFER:BitmapData;
 		private var CANVAS:Bitmap;
 		private var _capture:Timer;
+
+		private var _sound:Boolean = true;
 		
 		public function Ring()
 		{
@@ -78,7 +82,8 @@ package
 			var s4:SiONData = _driver.compile('<<c');
 			var s5:SiONData = _driver.compile('c');
 			var s6:SiONData = _driver.compile('c');
-			
+
+
 			SOUNDS_DATAS.push( s0, s1, s2, s3, s4, s5, s6 );
 			
 			_driver.play();
@@ -103,10 +108,10 @@ package
 			
 			var i:int;
 			var n:int = 7;
-			var incY:Number = stage.stageHeight / n;
 			var v:VertexBody;
 			var p:Point = new Point();
-			var posY:Number = incY / 2;
+			var posY:Number = stage.stageHeight / 5;
+			var incY:Number = stage.stageHeight / (n * 1.5);
 
 			p.x = _stageW2;
 			p.y = 0;
@@ -127,6 +132,7 @@ package
 			}
 			
 			p.y = stage.stageHeight;
+
 			var bottomAttach:VertexBody = new VertexBody( p, 1 );
 			addChild( bottomAttach );
 			_vertices.push( bottomAttach );
@@ -160,7 +166,7 @@ package
 			_drawingArea			= new Shape();
 			addChild( _drawingArea );
 			
-			_loop = new Timer( 25 );
+			_loop = new Timer( 30 );
 			_loop.addEventListener(TimerEvent.TIMER, update);
 			_loop.start();
 			
@@ -172,11 +178,50 @@ package
 			// Apply random force to the centered vertex
 			var bodyIndex:int 	= _vertices.length / 2;
 			var b1:b2Body 		= _vertices[ bodyIndex ].body;
-			var vx:Number 		= -10 / Config.WORLDSCALE;
+			var vx:Number 		= -5 / Config.WORLDSCALE;
 			var f1:b2Vec2		= new b2Vec2( vx, 0 );
 			var fap1:b2Vec2		= b1.GetWorldCenter();
 			b1.ApplyImpulse( f1, fap1 );
-		}		
+			
+			// 
+			stage.addEventListener(KeyboardEvent.KEY_DOWN, keyDownHandler);
+		}	
+		
+		protected function keyDownHandler(event:KeyboardEvent):void
+		{
+			switch( event.keyCode )
+			{
+				case Keyboard.R:
+
+					if ( contains( _drawingArea ) )
+					{
+						removeChild( _drawingArea );	
+					}
+					else
+					{
+						addChild( _drawingArea );
+					}
+					
+					
+					break;
+				case Keyboard.B:
+					
+					if ( contains( _vertices[0] ) )
+					{
+						for each (var v:VertexBody in _vertices) removeChild( v );	
+					}
+					else
+					{
+						for each (v in _vertices) addChild( v );
+					}
+					
+					break;
+				case Keyboard.S:
+
+						_sound = !_sound;
+					break;
+			}
+		}
 		
 		protected function takeSnapshot(event:TimerEvent):void
 		{
@@ -194,7 +239,6 @@ package
 			var i:int = 0;
 			var ln:int = _vertices.length;
 			
-			
 			for ( i = 0 ; i < ln ; i++ )
 			{
 				v = _vertices[ i ];
@@ -205,15 +249,16 @@ package
 					p 	= v.pixelCoordinates;
 					d 	= p.x - _stageW2;
 					
-					if ( Math.abs( d ) < 1 )
+					if ( Math.abs( d ) < .5 )
 					{
-						v.draw( 15, 0xffffff, .5 );
+						v.draw( 11, 0xffffff );
 						
 						v.scaleX = v.scaleY = 3;
 						v.alpha = 1;
 						
-						if ( _loop.currentCount > 10 )
+						if ( _loop.currentCount > 10 && _sound)
 						{
+							_driver.sequenceOff(1);
 							_driver.sequenceOn( SOUNDS_DATAS[ i - 1 ], _voice, 0, 0, 1, 1 );
 						}
 						
@@ -221,7 +266,7 @@ package
 					}
 					else 
 					{
-						v.draw( 10, 0xff0000, .5 );
+						v.draw( 10, 0xff0000, 1 );
 						v.alpha 	+= ( 0 - v.alpha ) * .05;
 						v.scaleX	+= ( 0 - v.scaleX ) * .05;
 						v.scaleY 	+= ( 0 - v.scaleY ) * .05;
@@ -258,8 +303,9 @@ package
 			var b1:b2Body 		= quad.bodies[ bodyIndex ].body;
 			
 			var vx:Number = 0, vy:Number = 0;
-			vx = (Math.random() * 4) / Config.WORLDSCALE;
-			vy = (Math.random() * 4) / Config.WORLDSCALE;
+			
+			vx = (-1 + Math.random() * 2) / Config.WORLDSCALE;
+			vy = 0; // (Math.random() * 4) / Config.WORLDSCALE;
 			
 			
 			var f1:b2Vec2		= new b2Vec2( vx, vy );
@@ -267,7 +313,7 @@ package
 			
 			b1.ApplyImpulse( f1, fap1 );
 			
-			if ( ln > 60 )
+			if ( ln > 20 )
 			{
 				var q:Quad = _quads.shift();
 				q.destroy();
@@ -283,12 +329,13 @@ package
 			var _loc1:Number 	= p.x;
 			var _loc2:Number 	= p.y - 5;
 			
-			var _loc3:int		= 20 + Math.random() * Math.random() * 20;
+			var _loc3:int		= 5 + Math.random() * 7;
+			var _loc4:int		= 5 + Math.random() * 12;
 			
 			points[0] = new Point( _loc1 , _loc2 );
 			points[1] = new Point( _loc1 + _loc3, _loc2 );
-			points[2] = new Point( _loc1 + _loc3, _loc2 + _loc3 );
-			points[3] = new Point( _loc1, _loc2 + _loc3 );
+			points[2] = new Point( _loc1 + _loc3, _loc2 + _loc4 );
+			points[3] = new Point( _loc1, _loc2 + _loc4 );
 			
 			var quad:Quad = new Quad( points );
 			_quadsContainer.addChild( quad );	
@@ -301,7 +348,7 @@ package
 		{
 			_drawingArea.graphics.clear();
 			
-			_drawingArea.graphics.lineStyle( 1, 0xffffff, 1 );
+			_drawingArea.graphics.lineStyle( .1, 0xffffff, .7 );
 
 			var ln:int 		= _vertices.length;
 			_drawingArea.graphics.moveTo( _vertices[ 0 ].x, _vertices[ 0 ].y );
@@ -319,7 +366,7 @@ package
 			_drawingArea.graphics.curveTo( _vertices[ i ].x, _vertices[ i ].y, _vertices[ i + 1 ].x, _vertices[ i + 1 ].y );
 			_drawingArea.graphics.endFill();
 			
-			_drawingArea.filters = [ BLUR_FILTER ];
+			// _drawingArea.filters = [ BLUR_FILTER ];
 		}
 		
 	}

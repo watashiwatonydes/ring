@@ -22,7 +22,8 @@ package geometry
 
 		private var _bodiesConnections:Vector.<JointConnection>;
 		private var _color:Number 			= 0xffffff;
-		private var _alpha:Number			= .9;
+		private var _alpha:Number			= 1;
+		private var FADE_FRICTION:Number	= Math.random() * .2;
 		
 		public function Quad( points:Vector.<Point>, bodyType:uint = 2 /* b2Body.b2_dynamicBody */ )
 		{
@@ -59,6 +60,8 @@ package geometry
 				b.destroy();
 				b = null;
 			}
+			
+			removeEventListener(Event.ADDED_TO_STAGE, onAddedToStage);
 		}
 		
 		protected function onAddedToStage(event:Event):void
@@ -115,7 +118,7 @@ package geometry
 				graphics.endFill();
 				
 				// Fade out slowly
-				_alpha 		+= (.1 - _alpha) * .1;
+				_alpha 		+= (.1 - _alpha) * FADE_FRICTION;
 			
 				
 				// scaleX		+= (.95 - scaleX) * .05;

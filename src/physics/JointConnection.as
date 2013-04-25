@@ -27,9 +27,14 @@ package physics
 		public var joint:b2Joint;
 		private var frequencyHz:Number;
 		private var dampingRatio:Number;
+		private var _ropeJointDistanceRatio:Number = 1;
 		
-		public function JointConnection(jointType:int, vertexBodyA:VertexBody, vertexBodyB:VertexBody, 
-										freqHz:Number = 4, dampingRatio:Number = .1)
+		public function JointConnection(jointType:int, 
+										vertexBodyA:VertexBody, 
+										vertexBodyB:VertexBody, 
+										freqHz:Number = 4, 
+										dampingRatio:Number = .1,
+										ropeJointDistanceRatio:Number = 1)
 		{
 			this.jointType 		= jointType;
 
@@ -38,6 +43,7 @@ package physics
 			
 			this.frequencyHz 	= freqHz;
 			this.dampingRatio 	= dampingRatio;
+			this._ropeJointDistanceRatio 	= ropeJointDistanceRatio;
 			
 			this.init();
 		}
@@ -65,7 +71,7 @@ package physics
 					distanceJointDef.frequencyHz        = this.frequencyHz;
 					distanceJointDef.dampingRatio       = this.dampingRatio; // Super Elastic
 					
-					this.joint                  = Config.WORLD.CreateJoint(distanceJointDef);
+					this.joint                  		= Config.WORLD.CreateJoint(distanceJointDef);
 					
 				break;
 				case JointConnection.ROPE_JOINT:
@@ -81,7 +87,7 @@ package physics
 																	  vertexBodyB.pixelCoordinates );
 					
 					
-					ropeJointDef.maxLength	 		= (dist) / Config.WORLDSCALE;
+					ropeJointDef.maxLength	 		= (dist * _ropeJointDistanceRatio) / Config.WORLDSCALE;
 					ropeJointDef.collideConnected 	= false;
 					
 					this.joint	= Config.WORLD.CreateJoint(ropeJointDef);
