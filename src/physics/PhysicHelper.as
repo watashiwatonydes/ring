@@ -8,9 +8,11 @@ package physics
 	{
 		
 		private static var ConnectionsMap:Object = new Object();
+		private static var _connectionType:uint;
 		
-		public static function ConnectBodies( bodies:Vector.<VertexBody> ):Vector.<JointConnection>
+		public static function ConnectBodies( bodies:Vector.<VertexBody>, connectionType:uint = 2 ):Vector.<JointConnection>
 		{
+			_connectionType = connectionType;
 			
 			var ln:int = bodies.length; 
 			if ( ln < 2 )
@@ -22,19 +24,48 @@ package physics
 			var b0:VertexBody, b1:VertexBody;
 			var conn:JointConnection;
 			
-			for ( var i:int = 0 ; i < ln - 1 ; i++ )
-			{
-				b0 	= bodies[ i ];
-				
-				for ( var j:int = i + 1 ; j < ln ; j++ )
-				{
-					b1 	= bodies[ j ];
-					
-					conn = new JointConnection( JointConnection.ROPE_JOINT, b0, b1 );
-					
-					buffer.push( conn );
-				}
-			}
+			b0 		= bodies[ 0 ];
+			b1 		= bodies[ 1 ];
+			conn 	= new JointConnection( _connectionType, b0, b1, 2, .1, 5 );
+			buffer.push( conn );
+
+			b0 		= bodies[ 0 ];
+			b1 		= bodies[ 4 ];
+			conn 	= new JointConnection( _connectionType, b0, b1, 2, .1, 5 );
+			buffer.push( conn );
+			
+			b0 		= bodies[ 0 ];
+			b1 		= bodies[ 3 ];
+			conn 	= new JointConnection( _connectionType, b0, b1, 2, .1, 5 );
+			buffer.push( conn );
+			
+			///
+			b0 		= bodies[ 1 ];
+			b1 		= bodies[ 2 ];
+			conn 	= new JointConnection( _connectionType, b0, b1, 2, .1, 5 );
+			buffer.push( conn );
+			
+			b0 		= bodies[ 1 ];
+			b1 		= bodies[ 4 ];
+			conn 	= new JointConnection( _connectionType, b0, b1, 2, .1, 5 );
+			buffer.push( conn );
+			
+			///
+			b0 		= bodies[ 2 ];
+			b1 		= bodies[ 3 ];
+			conn 	= new JointConnection( _connectionType, b0, b1, 2, .1, 5 );
+			buffer.push( conn );
+			
+			b0 		= bodies[ 2 ];
+			b1 		= bodies[ 4 ];
+			conn 	= new JointConnection( _connectionType, b0, b1, 2, .1, 5 );
+			buffer.push( conn );
+			
+			///
+			b0 		= bodies[ 3 ];
+			b1 		= bodies[ 4 ];
+			conn 	= new JointConnection( _connectionType, b0, b1, 2, .1, 5 );
+			buffer.push( conn );
 			
 			return buffer;
 		}
