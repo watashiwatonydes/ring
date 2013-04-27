@@ -21,21 +21,31 @@ package physics
 		private const _pixelInitialPosition:Point 	= new Point();
 		
 		public static var ID:int = 0;
+		private var _linearDamping:Number;
+		private var _angularDamping:Number;
+		private var _friction:Number;
+		private var _density:Number;
+		private var _restitution:Number;
 		private var _id:int = VertexBody.ID++;
 		
 		
 		public function VertexBody( position:Point, 
 									bodyType:uint 			= 2 /* b2Body.b2_dynamicBody */,
-									linearDamping:Number 	= .1,
-									angularDamping:Number 	= .1,
-									friction:Number 		= 0.9,
+									linearDamping:Number 	= .01,
+									angularDamping:Number 	= .01,
+									friction:Number 		= .01,
 									density:Number 			= .1,
 									restitution:Number 		= 1 )
 		{
 			this._pixelInitialPosition.x = position.x;
 			this._pixelInitialPosition.y = position.y;
 			
-			this._bodyType = bodyType;
+			_bodyType 					= bodyType;
+			_linearDamping 				= linearDamping;
+			_angularDamping				= angularDamping;
+			_friction					= friction;
+			_density					= density;
+			_restitution				= restitution;
 			
 			this.init();
 		}
@@ -55,16 +65,16 @@ package physics
 			
 			bodyDef.type 			    = _bodyType; 
 			
-			bodyDef.linearDamping	    = .01;
-			bodyDef.angularDamping	    = .01;
+			bodyDef.linearDamping	    = _linearDamping;
+			bodyDef.angularDamping	    = _angularDamping;
 			
 			var circularShape:b2CircleShape	= new b2CircleShape( 1 / Config.WORLDSCALE );
 			
 			var fixtureDef:b2FixtureDef	= new b2FixtureDef();
 			fixtureDef.shape			= circularShape;
-			fixtureDef.friction			= 0.5;
-			fixtureDef.density			= 1;
-			fixtureDef.restitution		= 1;
+			fixtureDef.friction			= _friction;
+			fixtureDef.density			= _density;
+			fixtureDef.restitution		= _restitution;
 			
 			this.body                   = Config.WORLD.CreateBody( bodyDef );
 			this._fixture               = this.body.CreateFixture( fixtureDef );
