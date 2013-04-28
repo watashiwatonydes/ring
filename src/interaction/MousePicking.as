@@ -87,7 +87,7 @@ package interaction
 				handleMouseMove( null );
 			}
 			
-			if ( dist >= 150 ) // Kill all joints
+			if ( dist >= 120 ) // Kill all joints
 			{
 				handleMouseUp( null );	
 			}
@@ -109,8 +109,8 @@ package interaction
 			_target.stage.addChild( _pickingAnchor );
 			
 			_dragJointConnection = new JointConnection( JointConnection.ROPE_JOINT, _pickingAnchor, vertex );
-			_target.stage.addChild( _dragJointConnection );
-			_dragJointConnection.draw();
+			// _target.stage.addChild( _dragJointConnection );
+			// _dragJointConnection.draw();
 			
 			var v2:b2Vec2 = mouseToWorld();
 			Config.WORLD.QueryPoint( this.queryCallback, v2 );
@@ -157,7 +157,7 @@ package interaction
 			
 			if( _dragJointConnection )
 			{
-				_target.stage.removeChild( _dragJointConnection );
+				// _target.stage.removeChild( _dragJointConnection );
 				Config.WORLD.DestroyJoint( _dragJointConnection.joint );
 				_dragJointConnection.joint 	= null;
 				_dragJointConnection 		= null;
@@ -220,8 +220,8 @@ package interaction
 		{
 			if( _pickingAnchor )
 			{
-				_pickingAnchor.update();
-				_pickingAnchor.draw();
+				// _pickingAnchor.update();
+				// _pickingAnchor.draw();
 			}
 		}
 		

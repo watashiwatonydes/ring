@@ -182,10 +182,10 @@ package
 		public function draw( event:TimerEvent ):void
 		{
 			
-			if ((event.currentTarget as Timer).currentCount % 5 == 0)
+			if ((event.currentTarget as Timer).currentCount % 3 == 0)
 				graphics.clear();
 			
-			graphics.lineStyle( .1, 0xffffff, .8 );
+			graphics.lineStyle( 1, 0xffffff );
 			
 			var ln:int 		= _vertices.length;
 			graphics.moveTo( _vertices[ 0 ].x, _vertices[ 0 ].y );
