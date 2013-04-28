@@ -24,6 +24,7 @@ package
 	import geometry.Quad;
 	
 	import interaction.MousePicking;
+	import interaction.PickingEvent;
 	
 	import org.si.sion.SiONData;
 	import org.si.sion.SiONDriver;
@@ -46,12 +47,14 @@ package
 		private var _pickings:Vector.<MousePicking>;
 		private var _pickingArea:Sprite;
 		
-		public static const SOUNDS_DATAS:Vector.<SiONData>	= new Vector.<SiONData>();
+		private const SOUNDS_DATAS:Vector.<Vector.<SiONData>> = new Vector.<Vector.<SiONData>>();
 		
 		private var _driver:SiONDriver;
 		private var _presets:SiONPresetVoice;
 		private var _voice:SiONVoice;
 		private var _lastUpdateCounter:int = 0;
+		private var _lastVx:Number;
+		private var _lastVy:Number;
 		
 		
 		public function Ring()
@@ -64,23 +67,38 @@ package
 		
 		private function init():void
 		{
-			// filters = [ new BlurFilter( 4, 4, 2 ) ];
+			filters = [ new BlurFilter( 4, 4, 3 ) ];
 			
 			_driver = new SiONDriver();
 			
-			var s0:SiONData 	= _driver.compile('<c');
-			var s1:SiONData 	= _driver.compile('c');
-			var s2:SiONData 	= _driver.compile('<<c');
-			var s3:SiONData 	= _driver.compile('c');
-			var s4:SiONData 	= _driver.compile('<c');
-			var s5:SiONData 	= _driver.compile('c');
-			var s6:SiONData 	= _driver.compile('<c');
-			var s7:SiONData 	= _driver.compile('c');
-			var s8:SiONData 	= _driver.compile('<<c');
-			var s9:SiONData 	= _driver.compile('c');
-			var s10:SiONData 	= _driver.compile('<c');
+			SOUNDS_DATAS[0]		= new Vector.<SiONData>()
+			SOUNDS_DATAS[1]		= new Vector.<SiONData>()
+			SOUNDS_DATAS[2]		= new Vector.<SiONData>()
 			
-			SOUNDS_DATAS.push( s0, s1, s2, s3, s4, s5, s6, s7, s8, s9, s10 );
+			var s00:SiONData 	= _driver.compile('>cg');
+			var s01:SiONData 	= _driver.compile('>c');
+			var s02:SiONData 	= _driver.compile('cg');
+			var s03:SiONData 	= _driver.compile('c');
+			var s04:SiONData 	= _driver.compile('<c');
+			
+			SOUNDS_DATAS[0].push( s00, s01, s02, s03, s04 );
+			
+			var s10:SiONData 	= _driver.compile('ca');
+			var s11:SiONData 	= _driver.compile('b');
+			var s12:SiONData 	= _driver.compile('ad');
+			var s13:SiONData 	= _driver.compile('>d');
+			var s14:SiONData 	= _driver.compile('>a');
+			
+			SOUNDS_DATAS[1].push( s10, s11, s12, s13, s14 );
+			
+			var s20:SiONData 	= _driver.compile('g');
+			var s21:SiONData 	= _driver.compile('f');
+			var s22:SiONData 	= _driver.compile('e');
+			var s23:SiONData 	= _driver.compile('>e');
+			var s24:SiONData 	= _driver.compile('>>e');
+			
+			SOUNDS_DATAS[2].push( s20, s21, s22, s23, s24 );
+			
 			_driver.play();
 			
 			_presets 	= new SiONPresetVoice();
@@ -105,22 +123,24 @@ package
 			
 			for ( i = 0 ; i < 3 ; i++ )
 			{
-				var ch:Chord 	= new Chord( offsetX );
+				var ch:Chord 	= new Chord( offsetX, i );
 				addChild( ch );
 				ch.addEventListener( ChordEvent.UPDATE, onChordUpdated );
 				_chords.push( ch );
 				
 				vertices	= ch.vertices;
 				pick		= new MousePicking( _pickingArea, vertices );
+				pick.addEventListener(PickingEvent.PICKING_UPDATE, onMousePickingUpdated);
 				_pickings.push( pick );
 				
-				offsetX -= 100;
+				offsetX += 100;
 			}
 			
 			_loop = new Timer( 30 );
 			_loop.addEventListener(TimerEvent.TIMER, update);
 			_loop.start();
 		}	
+		
 		
 		protected function update( event:TimerEvent ):void
 		{
@@ -148,15 +168,25 @@ package
 			var c:int 			= _loop.currentCount;
 			var diff:int 		= Math.abs( c - _lastUpdateCounter ); 
 			
-			if ( diff < 3 )
+			if ( diff < 10 )
 				return;
 			else
 			{
-				_driver.sequenceOn( SOUNDS_DATAS[ event.chordIndex ], _voice, 0, 0, 1, 1 );	
+				_driver.sequenceOn( SOUNDS_DATAS[ event.chordIndex ][ event.noteIndex ], _voice, 0, 0, 1, 1 );	
 				_lastUpdateCounter 	= c;
+				
+				
+				
 			}
 			
 		}
+		
+		protected function onMousePickingUpdated(event:PickingEvent):void
+		{
+			_lastVx = event.x;
+			_lastVy = event.y;
+		}
+		
 				
 	}
 }

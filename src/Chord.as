@@ -22,13 +22,15 @@ package
 		private var _connections:Vector.<JointConnection>;
 
 		private var _offsetX:Number;
+		private var _chordIndex:int;
 		
 		
-		public function Chord( offsetX:Number )
+		public function Chord( offsetX:Number, chordIndex:int )
 		{
 			super();
 			
-			_offsetX = offsetX;
+			_offsetX 	= offsetX;
+			_chordIndex = chordIndex;
 			
 			addEventListener(Event.ADDED_TO_STAGE, init);
 		}
@@ -164,10 +166,11 @@ package
 				{
 					if (Math.abs(v.pixelCoordinates.x - _offsetX) > 10)
 					{
-						e 				= new ChordEvent( ChordEvent.UPDATE );
-						e.chordIndex 	= i - 1;
+						e 					= new ChordEvent( ChordEvent.UPDATE );
+						e.chordIndex	 	= _chordIndex;
+						e.noteIndex 		= i - 1;
+						e.pixelCoordinates 	= v.pixelCoordinates;
 						dispatchEvent( e );
-						
 						
 					}
 				}
@@ -179,7 +182,7 @@ package
 		public function draw( event:TimerEvent ):void
 		{
 			
-			if ((event.currentTarget as Timer).currentCount % 3 == 0)
+			if ((event.currentTarget as Timer).currentCount % 5 == 0)
 				graphics.clear();
 			
 			graphics.lineStyle( .1, 0xffffff, .8 );

@@ -8,13 +8,14 @@ package interaction
 	
 	import flash.display.PixelSnapping;
 	import flash.display.Sprite;
+	import flash.events.EventDispatcher;
 	import flash.events.MouseEvent;
 	import flash.geom.Point;
 	
 	import physics.JointConnection;
 	import physics.VertexBody;
 
-	public class MousePicking
+	public class MousePicking extends EventDispatcher
 	{
 		private var _target:Sprite;
 		private var _bodies:Vector.<VertexBody>;
@@ -189,6 +190,18 @@ package interaction
 					
 					mousePos = mouseToWorld();
 					_mouseJoint.SetTarget( mousePos );
+					
+					
+					var anchorA:b2Vec2 = _mouseJoint.GetAnchorA();
+					var anchorB:b2Vec2 = _mouseJoint.GetAnchorB();
+					
+					var diffX:Number = anchorA.x - anchorB.x;
+					var diffY:Number = anchorA.y - anchorB.y;
+					
+					var e:PickingEvent = new PickingEvent( PickingEvent.PICKING_UPDATE );
+					e.x = diffX;
+					e.y = diffY;
+					dispatchEvent( e );
 				}
 				
 				if ( _pickingAnchor )
