@@ -57,7 +57,7 @@ package interaction
 				}
 			}
 
-			if ( dist < 100 )
+			if ( dist < 80 )
 			{
 				
 				if ( _pickingAnchor != null && _dragJointConnection != null )
@@ -86,7 +86,7 @@ package interaction
 				handleMouseMove( null );
 			}
 			
-			if ( dist >= 200 ) // Kill all joints
+			if ( dist >= 150 ) // Kill all joints
 			{
 				handleMouseUp( null );	
 			}
@@ -95,7 +95,16 @@ package interaction
 		private function createPickingVertexAndJoint( mousePoint:Point, vertex:VertexBody ):void
 		{
 			_pickingAnchor 					= new VertexBody( mousePoint, b2Body.b2_dynamicBody );
-			_pickingAnchor.draw( 20 );
+			
+			_pickingAnchor.graphics.clear();
+			_pickingAnchor.graphics.lineStyle( 1, 0xff0000 );
+			_pickingAnchor.graphics.beginFill( 0xff0000, .4 );
+			_pickingAnchor.graphics.drawCircle(0, 0, 20);
+			_pickingAnchor.graphics.endFill();
+			
+			_pickingAnchor.x 				= mousePoint.x * Config.WORLDSCALE;
+			_pickingAnchor.y 				= mousePoint.y * Config.WORLDSCALE;
+			
 			_target.stage.addChild( _pickingAnchor );
 			
 			_dragJointConnection = new JointConnection( JointConnection.ROPE_JOINT, _pickingAnchor, vertex );
@@ -180,6 +189,16 @@ package interaction
 					
 					mousePos = mouseToWorld();
 					_mouseJoint.SetTarget( mousePos );
+				}
+				
+				if ( _pickingAnchor )
+				{
+					_pickingAnchor.x = mousePos.x * Config.WORLDSCALE;
+					_pickingAnchor.y = mousePos.y * Config.WORLDSCALE;
+					
+					_pickingAnchor.alpha 	+= ( 0 - _pickingAnchor.alpha ) * 0.05;
+					_pickingAnchor.scaleX	+= ( 0 - _pickingAnchor.scaleX ) * 0.05;
+					_pickingAnchor.scaleY	+= ( 0 - _pickingAnchor.scaleY ) * 0.05;
 				}
 			}
 		}

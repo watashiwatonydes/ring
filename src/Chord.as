@@ -43,7 +43,7 @@ package
 			_connections 			= new Vector.<JointConnection>();
 			
 			var i:int;
-			var n:int = 10;
+			var n:int = 5;
 			var incY:Number = stage.stageHeight / n;
 			
 			var v:VertexBody; // dynamic
@@ -57,8 +57,8 @@ package
 			
 			
 			p.x = _offsetX;
-			q.x = p.x - 100;
-			r.x = p.x + 100;
+			q.x = p.x - 200;
+			r.x = p.x + 200;
 			q.y = r.y = p.y = 0;
 			
 			var topAttach:VertexBody = new VertexBody( p, 1 );
@@ -89,8 +89,6 @@ package
 				_staticVerticesRight.push( z );
 				
 				addChild( v );
-				v.draw( 10 );
-				
 				addChild( w );
 				addChild( z );
 				
@@ -140,12 +138,12 @@ package
 				co2 	= new JointConnection( JointConnection.DISTANCE_JOINT, l, b, 2, .001 );
 				_connections.push( co2 );
 				addChild( co2 );
-				co2.draw();
+				// co2.draw();
 				
 				co3 	= new JointConnection( JointConnection.DISTANCE_JOINT, b, ri, 2, .001 );
 				_connections.push( co3 );
 				addChild( co3 );
-				co3.draw();
+				// co3.draw();
 			}
 
 		}		
@@ -170,7 +168,7 @@ package
 						e.chordIndex 	= i - 1;
 						dispatchEvent( e );
 						
-						// _driver.sequenceOn( SOUNDS_DATAS[ i - 1 ], _voice, 0, 0, 1, 1 );
+						
 					}
 				}
 			}
@@ -181,10 +179,10 @@ package
 		public function draw( event:TimerEvent ):void
 		{
 			
-			// if ((event.currentTarget as Timer).currentCount % 3 == 0)
+			if ((event.currentTarget as Timer).currentCount % 3 == 0)
 				graphics.clear();
 			
-			graphics.lineStyle( 1, 0xffffff, 1 );
+			graphics.lineStyle( .1, 0xffffff, .8 );
 			
 			var ln:int 		= _vertices.length;
 			graphics.moveTo( _vertices[ 0 ].x, _vertices[ 0 ].y );

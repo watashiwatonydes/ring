@@ -14,6 +14,7 @@ package
 	import flash.events.MouseEvent;
 	import flash.events.TimerEvent;
 	import flash.filters.BlurFilter;
+	import flash.filters.DropShadowFilter;
 	import flash.geom.Point;
 	import flash.text.TextField;
 	import flash.text.TextFormat;
@@ -39,20 +40,18 @@ package
 		private var _stageW2:int;
 		private var _stageH2:int;
 		
-		private var _chords:Vector.<Chord>;
 		private var _loop:Timer;
 
-		private var _picking1:MousePicking;
+		private var _chords:Vector.<Chord>;
+		private var _pickings:Vector.<MousePicking>;
 		private var _pickingArea:Sprite;
-		
 		
 		public static const SOUNDS_DATAS:Vector.<SiONData>	= new Vector.<SiONData>();
 		
 		private var _driver:SiONDriver;
 		private var _presets:SiONPresetVoice;
 		private var _voice:SiONVoice;
-		private var _picking2:MousePicking;
-		
+		private var _lastUpdateCounter:int = 0;
 		
 		
 		public function Ring()
@@ -65,6 +64,8 @@ package
 		
 		private function init():void
 		{
+			// filters = [ new BlurFilter( 4, 4, 2 ) ];
+			
 			_driver = new SiONDriver();
 			
 			var s0:SiONData 	= _driver.compile('<c');
@@ -94,21 +95,27 @@ package
 			_pickingArea.graphics.drawRect( 0, 0, stage.stageWidth, stage.stageHeight );
 			addChild( _pickingArea );
 			
-			_chords = new Vector.<Chord>();
+			_chords 	= new Vector.<Chord>();
+			_pickings 	= new Vector.<MousePicking>();
 			
-			var chord00:Chord 	= new Chord( _stageW2 );
-			_chords.push( chord00 );
-			addChild( chord00 );
+			var i:int;
+			var offsetX:Number = _stageW2;
+			var vertices:Vector.<VertexBody>;
+			var pick:MousePicking;
 			
-			var chord01:Chord 	= new Chord( _stageW2 - 100 );
-			_chords.push( chord01 );
-			addChild( chord01 );
-
-			var vertices:Vector.<VertexBody> 		= chord00.vertices;
-			var vertices2:Vector.<VertexBody> 		= chord01.vertices;
-			
-			_picking1 = new MousePicking( _pickingArea, vertices );
-			_picking2 = new MousePicking( _pickingArea, vertices2 );
+			for ( i = 0 ; i < 3 ; i++ )
+			{
+				var ch:Chord 	= new Chord( offsetX );
+				addChild( ch );
+				ch.addEventListener( ChordEvent.UPDATE, onChordUpdated );
+				_chords.push( ch );
+				
+				vertices	= ch.vertices;
+				pick		= new MousePicking( _pickingArea, vertices );
+				_pickings.push( pick );
+				
+				offsetX -= 100;
+			}
 			
 			_loop = new Timer( 30 );
 			_loop.addEventListener(TimerEvent.TIMER, update);
@@ -123,23 +130,33 @@ package
 			
 			var i:int = 0;
 			var chord:Chord;
+			var picking:MousePicking;
 			var ln:int = _chords.length;
 			
 			for ( i = 0 ; i < ln ; i++ )
 			{
 				chord = _chords[ i ];
+				picking = _pickings[ i ];
+				
 				chord.update( event );
-			}
-			
-			if ( _picking1 && _picking2 )
-			{
-				_picking1.update();
-				_picking1.draw();
-				_picking2.update();
-				_picking2.draw();
+				picking.update();
 			}
 		}
 		
+		protected function onChordUpdated(event:ChordEvent):void
+		{
+			var c:int 			= _loop.currentCount;
+			var diff:int 		= Math.abs( c - _lastUpdateCounter ); 
+			
+			if ( diff < 3 )
+				return;
+			else
+			{
+				_driver.sequenceOn( SOUNDS_DATAS[ event.chordIndex ], _voice, 0, 0, 1, 1 );	
+				_lastUpdateCounter 	= c;
+			}
+			
+		}
 				
 	}
 }
