@@ -6,6 +6,7 @@ package interaction
 	import Box2D.Dynamics.b2Body;
 	import Box2D.Dynamics.b2Fixture;
 	
+	import flash.display.PixelSnapping;
 	import flash.display.Sprite;
 	import flash.events.MouseEvent;
 	import flash.geom.Point;
@@ -30,9 +31,6 @@ package interaction
 			
 			_target = target;
 			_bodies = bodies;
-			
-			_target.addEventListener(MouseEvent.MOUSE_DOWN, handleMouseDown);
-			
 		}
 	
 		protected function mouseToWorld():b2Vec2
@@ -41,52 +39,71 @@ package interaction
 			return buffer;
 		}
 		
-		protected function handleMouseDown(event:MouseEvent):void
+		public function update():void
 		{
 			var mousePoint:Point 			= new Point( _target.stage.mouseX, _target.stage.mouseY );
 			
 			var someVertexBody:VertexBody 	= null;
 			var dist:Number 				= Number.MAX_VALUE;
+			var toGlobalPoint:Point;
 			
 			for each(var b:VertexBody in _bodies)
 			{
-				var dist2Point:Number = Point.distance( b.pixelCoordinates, mousePoint );
+				var dist2Point:Number 	= Point.distance( b.pixelCoordinates, mousePoint );
 				if( dist2Point < dist )
 				{
 					someVertexBody 	= b;
 					dist 			= dist2Point;
 				}
 			}
+
+			if ( dist < 100 )
+			{
+				
+				if ( _pickingAnchor != null && _dragJointConnection != null )
+				{
+					// trace ( "bodyA: ", _dragJointConnection.joint.GetBodyA() == someVertexBody.body )
+					// trace ( "bodyB: ", _dragJointConnection.joint.GetBodyB() == someVertexBody.body )
+					
+					if ( _dragJointConnection.joint.GetBodyB() != someVertexBody.body ) // Another vertex is closer than the current one
+					{
+						handleMouseUp( null ); // Kill the current joint 
+						
+						createPickingVertexAndJoint( mousePoint, someVertexBody ); // Creates a new one	
+					}
+					else
+					{
+						handleMouseMove( null );
+					}
+				}
+				else
+				{
+					createPickingVertexAndJoint( mousePoint, someVertexBody );						
+				}
+			}
+			else
+			{
+				handleMouseMove( null );
+			}
 			
+			if ( dist >= 200 ) // Kill all joints
+			{
+				handleMouseUp( null );	
+			}
+		}
+		
+		private function createPickingVertexAndJoint( mousePoint:Point, vertex:VertexBody ):void
+		{
 			_pickingAnchor 					= new VertexBody( mousePoint, b2Body.b2_dynamicBody );
 			_pickingAnchor.draw( 20 );
-			_pickingAnchor.alpha = 0.3;
 			_target.stage.addChild( _pickingAnchor );
-
 			
-			_dragJointConnection = new JointConnection( JointConnection.ROPE_JOINT, _pickingAnchor, someVertexBody );
+			_dragJointConnection = new JointConnection( JointConnection.ROPE_JOINT, _pickingAnchor, vertex );
 			_target.stage.addChild( _dragJointConnection );
 			_dragJointConnection.draw();
 			
-			// Connect the anchor to all other bodies
-			/*
-			var conn:JointConnection;
-			for each ( b in _bodies )
-			{
-				conn 	= new JointConnection( JointConnection.ROPE_JOINT, b, _pickingAnchor );
-				_pickingJoints.push( conn );
-				
-				_target.stage.addChild( conn );
-				conn.draw();
-				
-			}
-			*/
-			
 			var v2:b2Vec2 = mouseToWorld();
 			Config.WORLD.QueryPoint( this.queryCallback, v2 );
-			
-			_target.stage.addEventListener(MouseEvent.MOUSE_MOVE, handleMouseMove);
-			_target.stage.addEventListener(MouseEvent.MOUSE_UP, handleMouseUp);
 		}
 		
 		private function queryCallback( fixture:b2Fixture ):void
@@ -102,8 +119,8 @@ package interaction
 					jointDef.bodyB 		    = touchedBody;
 					jointDef.target 	    = mouseToWorld();
 					jointDef.maxForce	    = 1000 * touchedBody.GetMass();
-					jointDef.frequencyHz    = 2;
-					jointDef.dampingRatio   = .01;
+					jointDef.frequencyHz    = 6;
+					jointDef.dampingRatio   = .1;
 					
 					_mouseJoint				= Config.WORLD.CreateJoint( jointDef ) as b2MouseJoint;
 					
@@ -119,9 +136,6 @@ package interaction
 		
 		protected function handleMouseUp(event:MouseEvent):void
 		{
-			_target.stage.removeEventListener(MouseEvent.MOUSE_MOVE, handleMouseMove);
-			_target.stage.removeEventListener(MouseEvent.MOUSE_UP, handleMouseUp);
-			
 			for each ( var j:JointConnection in _pickingJoints )
 			{
 				Config.WORLD.DestroyJoint( j.joint );
@@ -160,7 +174,7 @@ package interaction
 		protected function handleMouseMove(event:MouseEvent):void
 		{
 			var mousePos:b2Vec2 = null;
-			if( event.buttonDown )
+			// if( event.buttonDown )
 			{
 				if( _mouseJoint ){
 					
@@ -175,6 +189,7 @@ package interaction
 			if( _pickingAnchor )
 			{
 				_pickingAnchor.update();
+				_pickingAnchor.draw();
 			}
 		}
 		
