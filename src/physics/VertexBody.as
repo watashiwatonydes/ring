@@ -27,6 +27,11 @@ package physics
 		private var _density:Number;
 		private var _restitution:Number;
 		private var _id:int = VertexBody.ID++;
+		private var _picked:Boolean = false;
+		
+		
+		public var note:int;
+		public var octave:int;
 		
 		
 		public function VertexBody( position:Point, 
@@ -141,6 +146,16 @@ package physics
 		public function set bodyType(value:uint):void
 		{
 			_bodyType = value;
+		}
+
+		public function get picked():Boolean
+		{
+			return _picked;
+		}
+
+		public function set picked(value:Boolean):void
+		{
+			_picked = value;
 		}
 
 		

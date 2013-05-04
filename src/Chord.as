@@ -3,6 +3,7 @@ package
 	import Box2D.Dynamics.b2Body;
 	
 	import flash.display.DisplayObjectContainer;
+	import flash.display.Shape;
 	import flash.display.Sprite;
 	import flash.display.Stage;
 	import flash.events.Event;
@@ -23,6 +24,9 @@ package
 
 		private var _offsetX:Number;
 		private var _chordIndex:int;
+		private var _canvas:Shape;
+
+		private var _cpl:Point = new Point();
 		
 		
 		public function Chord( offsetX:Number, chordIndex:int )
@@ -38,6 +42,10 @@ package
 		public function init( event:Event ):void
 		{
 			removeEventListener(Event.ADDED_TO_STAGE, init);
+
+			addChild( _canvas = new Shape() );
+			
+			_canvas.filters = [ Ring.BLUR ];
 			
 			_vertices 				= new Vector.<VertexBody>();
 			_staticVerticesLeft		= new Vector.<VertexBody>();
@@ -75,6 +83,8 @@ package
 			_staticVerticesLeft.push( topAttach );
 			_staticVerticesRight.push( topAttach );
 			
+			var NOTES:Array = [ 1, 3, 6, 8, 10 ];
+			
 			for ( i = 0 ; i < n ; i++ )
 			{
 				p.y = posY;
@@ -83,6 +93,11 @@ package
 				
 				v = new VertexBody( p );
 				_vertices.push( v );
+				
+				v.note = NOTES[ i ];
+				v.octave = _chordIndex + 1;
+				
+				v.draw( 10, 0xffffff, 1 );
 				
 				w = new VertexBody( q, 1 );
 				_staticVerticesLeft.push( w );
@@ -164,14 +179,29 @@ package
 			
 				if ( v.bodyType == b2Body.b2_dynamicBody )
 				{
-					if (Math.abs(v.pixelCoordinates.x - _offsetX) > 10)
+					var diffX:Number 		= Math.abs(v.pixelCoordinates.x - _offsetX);
+					var linearVelX:Number 	= Math.abs(v.body.GetLinearVelocity().x);
+					
+					 
+					if (diffX > 10)
 					{
-						e 					= new ChordEvent( ChordEvent.UPDATE );
+						e 					= new ChordEvent( ChordEvent.BENT );
 						e.chordIndex	 	= _chordIndex;
 						e.noteIndex 		= i - 1;
+						e.vertex			= v;
 						e.pixelCoordinates 	= v.pixelCoordinates;
 						dispatchEvent( e );
 						
+					}
+					else if ( diffX < .2 && linearVelX > 0.03)
+					{
+						v.draw( 10, 0xFFFFFF );
+						
+						v.alpha = 1;
+					}
+					else
+					{
+						v.draw( 10, 0xFF0000 );
 					}
 				}
 			}
@@ -181,27 +211,31 @@ package
 		
 		public function draw( event:TimerEvent ):void
 		{
+			if ((event.currentTarget as Timer).currentCount % 2 == 0)
+				_canvas.graphics.clear();
 			
-			if ((event.currentTarget as Timer).currentCount % 3 == 0)
-				graphics.clear();
-			
-			graphics.lineStyle( 1, 0xffffff );
+			_canvas.graphics.lineStyle( .1, 0xffffff );
 			
 			var ln:int 		= _vertices.length;
-			graphics.moveTo( _vertices[ 0 ].x, _vertices[ 0 ].y );
+			_canvas.graphics.moveTo( _vertices[ 0 ].x, _vertices[ 0 ].y );
 			
-			var cpl:Point = new Point();
 			var i:int;
 			for ( i = 1 ; i < ln - 2 ; i++)
 			{
-				cpl.x = (_vertices[ i ].x + _vertices[ i+1 ].x) * .5;
-				cpl.y = (_vertices[ i ].y + _vertices[ i+1 ].y) * .5;
+				_cpl.x = (_vertices[ i ].x + _vertices[ i+1 ].x) * .5;
+				_cpl.y = (_vertices[ i ].y + _vertices[ i+1 ].y) * .5;
 				
-				graphics.curveTo( _vertices[ i ].x, _vertices[ i ].y, cpl.x, cpl.y );
+				_canvas.graphics.curveTo( _vertices[ i ].x, _vertices[ i ].y, _cpl.x, _cpl.y );
 			}
 			
-			graphics.curveTo( _vertices[ i ].x, _vertices[ i ].y, _vertices[ i + 1 ].x, _vertices[ i + 1 ].y );
-			graphics.endFill();
+			_canvas.graphics.curveTo( _vertices[ i ].x, _vertices[ i ].y, _vertices[ i + 1 ].x, _vertices[ i + 1 ].y );
+			_canvas.graphics.endFill();
+			
+			var vertex:VertexBody;
+			for each (vertex in _vertices)
+			{
+				vertex.alpha += ( 0 - vertex.alpha ) * .1; 
+			}
 		}
 		
 		public function get vertices():Vector.<VertexBody>

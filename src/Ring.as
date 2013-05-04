@@ -5,20 +5,12 @@ package
 	
 	import flash.display.Bitmap;
 	import flash.display.BitmapData;
-	import flash.display.Shape;
 	import flash.display.Sprite;
 	import flash.display.StageAlign;
 	import flash.display.StageScaleMode;
-	import flash.events.Event;
-	import flash.events.KeyboardEvent;
-	import flash.events.MouseEvent;
 	import flash.events.TimerEvent;
 	import flash.filters.BlurFilter;
-	import flash.filters.DropShadowFilter;
 	import flash.geom.Point;
-	import flash.text.TextField;
-	import flash.text.TextFormat;
-	import flash.ui.Keyboard;
 	import flash.utils.Timer;
 	
 	import geometry.Quad;
@@ -26,13 +18,6 @@ package
 	import interaction.MousePicking;
 	import interaction.PickingEvent;
 	
-	import org.si.sion.SiONData;
-	import org.si.sion.SiONDriver;
-	import org.si.sion.SiONVoice;
-	import org.si.sion.utils.SiONPresetVoice;
-	import org.si.sound.namespaces._sound_object_internal;
-	
-	import physics.JointConnection;
 	import physics.VertexBody;
 	
 	[SWF( widthPercent="100", heightPercent="100", backgroundColor=0x000000, frameRate="50" )]
@@ -47,20 +32,16 @@ package
 		private var _pickings:Vector.<MousePicking>;
 		private var _pickingArea:Sprite;
 		
-		private const SOUNDS_DATAS:Vector.<SiONData> = new Vector.<SiONData>();
-		// private const COLORS:Array 		= [ 0x124D6B, 0x31526B, 0x008FBD, 0x44C9E0, 0xC2DADB ];
 		private const COLORS:Array = [ 0x1369AB, 0x7108A0, 0x00940E, 0xFFD702, 0xA02F09 ];
+		public static const BLUR:BlurFilter 	= new BlurFilter( 4, 4, 1 );
+		private var CANVAS:BitmapData;
+		private var HOLDER:Bitmap;
 		
-		private const BLUR:BlurFilter 	= new BlurFilter( 4, 4, 3 );
-		
-		private var _driver:SiONDriver;
-		private var _presets:SiONPresetVoice;
-		private var _voice:SiONVoice;
-		private var _lastUpdateCounter:int = 0;
 		private var _lastVx:Number;
 		private var _lastVy:Number;
 		private var _quads:Vector.<Quad>;
 		private var _quadsContainer:Sprite;
+		private var _drawTimer:Timer;
 		
 		public function Ring()
 		{
@@ -72,30 +53,16 @@ package
 		
 		private function init():void
 		{
-			
-			
-			_driver = new SiONDriver();
-			
-			var s00:SiONData 	= _driver.compile('>>c');
-			var s01:SiONData 	= _driver.compile('>c');
-			var s02:SiONData 	= _driver.compile('c');
-			
-			SOUNDS_DATAS.push( s00, s01, s02 );
-			
-			_driver.play();
-			
-			_presets 	= new SiONPresetVoice();
-			_voice		= _presets[ "default" ][ 0 ];
-
 			// 
 			_stageW2 	= stage.stageWidth * .5;
 			_stageH2 	= stage.stageHeight * .5;
 
+			
 			_pickingArea 	= new Sprite();
-			_pickingArea.graphics.beginFill( 0x111111 );
+			_pickingArea.graphics.beginFill( 0x000000 );
 			_pickingArea.graphics.drawRect( 0, 0, stage.stageWidth, stage.stageHeight );
 			addChild( _pickingArea );
-			
+
 			_quadsContainer 	= new Sprite();
 			addChild( _quadsContainer );
 			
@@ -104,16 +71,15 @@ package
 			_quads 		= new Vector.<Quad>();
 			
 			var i:int;
-			var offsetX:Number = _stageW2;
+			var offsetX:Number = _stageW2 - 200;
 			var vertices:Vector.<VertexBody>;
 			var pick:MousePicking;
 			
-			for ( i = 0 ; i < 3 ; i++ )
+			for ( i = 0 ; i < 5 ; i++ )
 			{
 				var ch:Chord 	= new Chord( offsetX, i );
 				addChild( ch );
-				ch.filters = [ BLUR ];
-				ch.addEventListener( ChordEvent.UPDATE, onChordUpdated );
+				ch.addEventListener( ChordEvent.BENT, onChordBent );
 				_chords.push( ch );
 				
 				vertices	= ch.vertices;
@@ -127,8 +93,12 @@ package
 			_loop = new Timer( 30 );
 			_loop.addEventListener(TimerEvent.TIMER, update);
 			_loop.start();
-		}	
+		}			
 		
+		protected function onDraw(event:TimerEvent):void
+		{
+			CANVAS.draw( _quadsContainer );
+		}
 		
 		protected function update( event:TimerEvent ):void
 		{
@@ -152,32 +122,22 @@ package
 			var q:Quad;
 			for each ( q in _quads )
 			{
-				q.draw();
+				q.draw( event );
 			}
 		}
 		
-		protected function onChordUpdated(event:ChordEvent):void
+		protected function onChordBent(event:ChordEvent):void
 		{
-			var c:int 			= _loop.currentCount;
-			var diff:int 		= Math.abs( c - _lastUpdateCounter ); 
-			
 			collide( event.pixelCoordinates );
-			
-			if ( diff < 10 )
-				return;
-			else
-			{
-				// _driver.sequenceOn( SOUNDS_DATAS[ event.chordIndex ], _voice, 0, 0, 1, 1 );	
-				_lastUpdateCounter 	= c;
-				
-			}
-			
 		}
 		
 		protected function onMousePickingUpdated(event:PickingEvent):void
 		{
 			_lastVx = ( event.x > 3 ) ? 3 : event.x;
 			_lastVy = ( event.y > 3 ) ? 3 : event.y;
+			
+			_lastVx = ( event.x < .3 ) ? .3 : event.x;
+			_lastVy = ( event.y < .3 ) ? .3 : event.y;
 		}
 		
 		private function collide(p:Point):void
@@ -201,7 +161,7 @@ package
 			
 			b1.ApplyImpulse( f1, fap1 );
 			
-			if ( ln > 30 )
+			if ( ln > 20 )
 			{
 				var q:Quad = _quads.shift();
 				q.destroy();

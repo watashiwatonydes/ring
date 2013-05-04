@@ -7,7 +7,11 @@ package geometry
 	import flash.display.Shape;
 	import flash.display.Sprite;
 	import flash.events.Event;
+	import flash.events.TimerEvent;
+	import flash.filters.DropShadowFilter;
+	import flash.filters.GlowFilter;
 	import flash.geom.Point;
+	import flash.utils.Timer;
 	
 	import interaction.MouseDestination;
 	import interaction.MousePicking;
@@ -23,10 +27,12 @@ package geometry
 		private var _bodiesConnections:Vector.<JointConnection>;
 		private var _color:Number 			= 0xffffff;
 		private var _alpha:Number			= 1;
-		private var FADE_FRICTION:Number	= Math.random() * .2;
+		private var FADE_FRICTION:Number	= (Math.random() * 2) / 10;
 		
 		public function Quad( points:Vector.<Point>, bodyType:uint = 2 /* b2Body.b2_dynamicBody */ )
 		{
+			
+			
 			_bodies 	= new Vector.<VertexBody>(5, true);
 			
 			_bodies[0] 	= new VertexBody( points[0], bodyType );
@@ -78,14 +84,13 @@ package geometry
 			{
 				stage.addChild( r );				
 			}
-			
-			draw();
 		}		
 		
-		public function draw():void
+		public function draw( event:TimerEvent = null ):void
 		{
 			if ( true )
 			{
+				
 				graphics.clear();
 
 				var r:VertexBody
@@ -94,8 +99,8 @@ package geometry
 					r.update();
 				}
 				
-				graphics.lineStyle( 1, _color, _alpha );
-				graphics.beginFill( _color, _alpha );
+				graphics.lineStyle( 1, 0xFFFFFF, 1 );
+				graphics.beginFill( 0xFFFFFF, 1 );
 				
 				
 				var cpl:Point 	= new Point();
@@ -118,20 +123,7 @@ package geometry
 				graphics.endFill();
 				
 				// Fade out slowly
-				_alpha 		+= (.1 - _alpha) * FADE_FRICTION;
-			
-				
-				// scaleX		+= (.95 - scaleX) * .05;
-				// scaleY 		+= (.95 - scaleX) * .05;
-				
-				/*
-				graphics.moveTo( _bodies[ 0 ].x, _bodies[ 0 ].y );
-				graphics.lineTo( _bodies[ 1 ].x, _bodies[ 1 ].y );
-				graphics.lineTo( _bodies[ 2 ].x, _bodies[ 2 ].y );
-				graphics.lineTo( _bodies[ 3 ].x, _bodies[ 3 ].y );
-				graphics.lineTo( _bodies[ 0 ].x, _bodies[ 0 ].y );
-				*/
-				
+				alpha 		+= (.1 - alpha) * FADE_FRICTION;
 			}
 		}
 

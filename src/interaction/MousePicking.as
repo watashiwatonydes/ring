@@ -24,6 +24,7 @@ package interaction
 		private var _pickingJoints:Vector.<JointConnection> = new Vector.<JointConnection>();
 		private var _mouseJoint:b2MouseJoint;
 		private var _dragJointConnection:JointConnection;
+		private var _pickedVertex:VertexBody;
 		
 		public function MousePicking( target:Sprite, bodies:Vector.<VertexBody> )
 		{
@@ -46,7 +47,7 @@ package interaction
 			
 			var someVertexBody:VertexBody 	= null;
 			var dist:Number 				= Number.MAX_VALUE;
-			var toGlobalPoint:Point;
+			
 			
 			for each(var b:VertexBody in _bodies)
 			{
@@ -87,7 +88,7 @@ package interaction
 				handleMouseMove( null );
 			}
 			
-			if ( dist >= 120 ) // Kill all joints
+			if ( dist >= 200 ) // Kill all joints
 			{
 				handleMouseUp( null );	
 			}
@@ -95,6 +96,12 @@ package interaction
 		
 		private function createPickingVertexAndJoint( mousePoint:Point, vertex:VertexBody ):void
 		{
+			_pickedVertex 					= vertex;
+			_pickedVertex.picked 			= true;
+			
+			dispatchEvent( new PickingEvent( PickingEvent.PICKING_VERTEX ) );
+			
+			
 			_pickingAnchor 					= new VertexBody( mousePoint, b2Body.b2_dynamicBody );
 			
 			_pickingAnchor.graphics.clear();
@@ -109,8 +116,6 @@ package interaction
 			_target.stage.addChild( _pickingAnchor );
 			
 			_dragJointConnection = new JointConnection( JointConnection.ROPE_JOINT, _pickingAnchor, vertex );
-			// _target.stage.addChild( _dragJointConnection );
-			// _dragJointConnection.draw();
 			
 			var v2:b2Vec2 = mouseToWorld();
 			Config.WORLD.QueryPoint( this.queryCallback, v2 );
@@ -146,6 +151,9 @@ package interaction
 		
 		protected function handleMouseUp(event:MouseEvent):void
 		{
+			if ( _pickedVertex )
+				_pickedVertex.picked 			= false;
+			
 			for each ( var j:JointConnection in _pickingJoints )
 			{
 				Config.WORLD.DestroyJoint( j.joint );
@@ -209,9 +217,11 @@ package interaction
 					_pickingAnchor.x = mousePos.x * Config.WORLDSCALE;
 					_pickingAnchor.y = mousePos.y * Config.WORLDSCALE;
 					
-					_pickingAnchor.alpha 	+= ( 0 - _pickingAnchor.alpha ) * 0.05;
+					_pickingAnchor.alpha 	+= ( 0 - _pickingAnchor.alpha ) * 0.1;
+					/*
 					_pickingAnchor.scaleX	+= ( 0 - _pickingAnchor.scaleX ) * 0.05;
 					_pickingAnchor.scaleY	+= ( 0 - _pickingAnchor.scaleY ) * 0.05;
+					*/
 				}
 			}
 		}
@@ -224,6 +234,17 @@ package interaction
 				// _pickingAnchor.draw();
 			}
 		}
+
+		public function get pickedVertex():VertexBody
+		{
+			return _pickedVertex;
+		}
+
+		public function set pickedVertex(value:VertexBody):void
+		{
+			_pickedVertex = value;
+		}
+
 		
 	}
 }
